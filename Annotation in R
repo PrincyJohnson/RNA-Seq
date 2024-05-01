@@ -1,3 +1,6 @@
+Download gffread software in linux and use the command to convert the GFF3 file to GTF:
+gffread my.gff3 -T -o my.gtf
+
 # Read the GTF file using the data.table package
 
 library(data.table)
