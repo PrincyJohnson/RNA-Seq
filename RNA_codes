@@ -1,0 +1,60 @@
+1. Setup and Pre-requisites
+To follow this tutorial, you will need to install the following software:
+Bioconductor: For bioinformatics tools within R.
+FastQC: For quality control of raw reads.
+STAR or HISAT2: For alignment of reads to a reference genome.
+featureCounts (from Subread package): For quantifying gene expression.
+DESeq2: For differential expression analysis.
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install(c("GenomicFeatures", "DESeq2", "edgeR", "AnnotationDbi"))
+
+For external tools like FastQC, STAR, and HISAT2, please visit their respective websites for installation instructions:
+
+FastQC: https://www.bioinformatics.babraham.ac.uk/projects/download.html
+STAR: https://github.com/alexdobin/STAR
+HISAT2: http://ccb.jhu.edu/software/hisat2/index.shtml
+
+2. Quality Control
+The first step is to assess the quality of the raw sequencing reads using FastQC.
+
+Run FastQC:
+fastqc data/sample_1.fastq data/sample_2.fastq -o fastqc_results/
+
+3. Alignment
+Next, align the reads to a reference genome using HISAT2 (you could also use STAR if you prefer; the process is similar).
+
+Build HISAT2 index:
+hisat2-build reference_genome.fa reference_index
+
+Align reads to the reference genome:
+hisat2 -p 8 -x reference_index -1 data/sample_1.fastq -2 data/sample_2.fastq -S output/sample_aligned.sam
+
+4. Convert SAM to BAM, Sort and Index
+samtools view -bS output/sample_aligned.sam > output/sample_aligned.bam
+samtools sort output/sample_aligned.bam -o output/sample_aligned_sorted.bam
+samtools index output/sample_aligned_sorted.bam
+
+5. Quantifying Gene Expression
+featureCounts -a annotation.gtf -o counts.txt output/sample_aligned_sorted.bam
+
+6. Differential Expression Analysis Using DESeq2
+library(DESeq2)
+countData <- read.table("counts.txt", header=TRUE, row.names=1)
+colData <- data.frame(condition=factor(c("High protein", "low protein")))
+dds <- DESeqDataSetFromMatrix(countData = countData, colData = colData, design = ~ condition)
+dds <- DESeq(dds)
+res <- results(dds)
+write.csv(as.data.frame(res), file="DESeq2_results.csv")
+
+7. Result Interpretation
+resOrdered <- res[order(res$pvalue), ]
+head(resOrdered)
+
+8. Visualization
+library(ggplot2)
+ggplot(as.data.frame(res), aes(x=log2FoldChange, y=-log10(pvalue))) +
+    geom_point() +
+    theme_minimal()
