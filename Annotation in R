@@ -38,3 +38,48 @@ head(gtf_data,5)
 colnames(gtf_data)[1] <- "Chr"
 colnames(gtf_data)[4] <- "Start"
 colnames(gtf_data)[5] <- "End"
+
+
+# Set the window size
+window_size <- 500000  # 200 KB
+
+# Initialize a list to store the results
+surrounding_genes <- list()
+
+# Loop through each SNP
+for (i in 1:nrow(top_0.05_percent_genes_protein)) {
+  # Get SNP information
+  snp_info <- top_0.05_percent_genes_protein[i, ]
+  snp_position <- snp_info$position
+  chromosome <- snp_info$Chr
+  
+  # Define the window boundaries
+  start_position <- snp_position - window_size
+  end_position <- snp_position + window_size
+  
+  # Subset genes within the window
+  genes_within_window <- gtf_data[gtf_data$Chr == chromosome & 
+                                    gtf_data$End >= start_position & 
+                                    gtf_data$Start <= end_position, ]
+  
+  # Store the genes within the window
+  surrounding_genes[[i]] <- genes_within_window
+}
+
+# Combine all genes within the window into a single data frame
+surrounding_genes_df <- do.call(rbind, surrounding_genes)
+
+# Remove duplicate genes
+surrounding_genes_df <- unique(surrounding_genes_df)
+
+
+
+# Print the resulting genes
+print(surrounding_genes_df)
+
+# Group by the gene_id column and summarize to get unique values
+unique_genes <- surrounding_genes_df %>%
+  group_by(gene_id) %>%
+  summarize_all(first)
+# Replace "." with "-" in the gene_id column
+unique_genes$gene_id <- gsub("\\-", ".", unique_genes$gene_id)
