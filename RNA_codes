@@ -18,7 +18,7 @@ STAR: https://github.com/alexdobin/STAR
 HISAT2: http://ccb.jhu.edu/software/hisat2/index.shtml
 
 Download FASTQ files from SRA database using following command:
-fastq-dump --split-files SRR28842165 #fastq-dump command is from SRA toolkit: NCBI SRA Toolkit download page.
+fastq-dump --split-files SRR28842165 #fastq-dump command is from SRA toolkit: https://github.com/ncbi/sra-tools/wiki/01.-Downloading-SRA-Toolkit
 
 https://trace.ncbi.nlm.nih.gov/Traces/?view=run_browser&acc=SRR28842165&display=metadata 
 
