@@ -1,0 +1,37 @@
+# Read the GTF file using the data.table package
+
+library(data.table)
+library(stringr)
+
+# Read the GTF file using the data.table package
+gtf_data <- fread("chinese_genes.gtf", header = FALSE, quote = "")
+
+# Split the V9 column into separate transcript_id and gene_id columns
+gtf_data[, c("transcript_id", "gene_id") := tstrsplit(V9, "; ", fixed = TRUE)]
+
+# Remove the prefixes ("transcript_id " and "gene_id ") from the values
+gtf_data[, c("transcript_id", "gene_id") := lapply(.SD, function(x) sub("^.*\"(.*)\"$", "\\1", x)), .SDcols = c("transcript_id", "gene_id")]
+
+# Print the updated data.table
+head(gtf_data,5)
+View(gtf_data)
+# Remove the V9 column
+gtf_data[, V9 := NULL]
+
+# Remove the "gene_id " prefix from the gene_id column
+gtf_data[, gene_id := sub("^gene_id ", "", gene_id)]
+gtf_data[, gene_id := gsub(";", "", gene_id)]
+
+
+### remove the prefix in transcript id
+gtf_data$transcript_id <- sub("^.*\\|(Psat\\d+G\\d+).*", "\\1", gtf_data$transcript_id)
+
+# Remove the quotes from the gene_id column
+gtf_data[, gene_id := gsub("\"", "", gene_id)]
+
+# Convert the gtf_data to a data.table
+gtf_data <- as.data.table(gtf_data)
+head(gtf_data,5)
+colnames(gtf_data)[1] <- "Chr"
+colnames(gtf_data)[4] <- "Start"
+colnames(gtf_data)[5] <- "End"
